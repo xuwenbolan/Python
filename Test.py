@@ -1,3 +1,4 @@
+from urllib import parse
 def quicksort(arr):
     if len(arr) <= 1:
         return arr
@@ -7,4 +8,5 @@ def quicksort(arr):
     right = [x for x in arr if x > pivot]
     return quicksort(left) + middle + quicksort(right)
 
-print(quicksort([3,6,8,10,1,2,1]))
+string="%E7%94%B5%E8%A7%86"
+print(parse.unquote(string))
