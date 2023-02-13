@@ -5,16 +5,13 @@ from urllib.parse import unquote
 import time
 import queue
 
-#速度+进度
-#异常处理（True，False）
-#暂停、销毁
-#文件路径传入
-
 class muti_download:
     MB = 1024**2
     q=queue.Queue(10)
     URL = ""
-    filename = ""
+    speed = 0
+    downsize = 0
+    progress = 0
 
     def __init__(self,url,Path):
         self.URL = url
@@ -31,7 +28,6 @@ class muti_download:
             for chunk in res.iter_content(chunk_size=64*1024):
                 if chunk:
                     f.write(chunk)
-        print(s_pos,"seccess")
         self.q.put(proxies)
 
     def split(self,start: int, end: int, step: int) -> list[tuple[int, int]]:
@@ -55,6 +51,14 @@ class muti_download:
         filename = filename.replace('"',"")
         return filename
 
+    def stop(self):
+        try:
+            self.t.shutdown(wait=False,cancel_futures=True)
+            os.remove(self.filename)
+        except:
+            return False
+        return True
+
     def get_proixy(self):
         while(self.q.qsize()<9):
             proxies = {'http': '','https':''}
@@ -73,26 +77,39 @@ class muti_download:
             resp = requests.get(self.URL,headers=headers,proxies=proxies,timeout=3)
         except:
             return False
-        print(proxies,resp.status_code)
+        # print(proxies,resp.status_code)
         if(resp.status_code==206):
             return True
         else:
             return False
+    
+    def get_speed(self,self2):
+        self.downsize += self.MB
+        self.speed = self.downsize/(time.time()-self.start)
+        self.progress = (self.downsize/self.totalsize)*100
+        print("%d%%" % self.progress)
+        # print("%.1fMB/s" % (self.speed/1000000))
         
     def begin(self):
         self.get_proixy()
-        start = time.time()
-        res = requests.head(self.URL,headers=self.headers)
+        self.start = time.time()
+        try:
+            res = requests.head(self.URL,headers=self.headers)
+        except:
+            return False
         res_headers = res.headers
         filesize = int(res_headers['Content-Length'])
+        if(filesize==0 | res.status_code!=200):
+            return False
+        self.totalsize = filesize
         each_size = min(self.MB, filesize)
         parts = self.split(0, filesize, each_size)
         filename = self.get_file_name(res_headers)
+        filename = self.Path + filename
         self.filename = filename
         with open(filename, "wb") as f:
             pass
-        with ThreadPoolExecutor(max_workers=9) as t:
-            for s_pos,e_pos in parts:
-                t.submit(self.range_download,filename,s_pos,e_pos)
-        end = time.time()
-        print(end - start)
+        self.t = ThreadPoolExecutor(max_workers=9)
+        for s_pos,e_pos in parts:
+            self.t.submit(self.range_download,filename,s_pos,e_pos).add_done_callback(self.get_speed)
+        return True
