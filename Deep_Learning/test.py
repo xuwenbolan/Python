@@ -68,16 +68,16 @@ eval_dataset = MNISTDataset(data_train.iloc[-eval_count:], val_transform)
 
 data_test = pd.read_csv('/home/xuwenbo/data/test.csv')
 test_dataset = MNISTDataset(data_test, test_transform, is_test=True)
-
-print(data_train)
-
-data_train.label.unique()
-data_train[data_train.label == 1].to_numpy()
-
-row = data_train.iloc[1].to_numpy()
-label = row[0]
-digit_img = row[1:].reshape(28, 28)
-print("label:",label)
+#
+# print(data_train)
+#
+# data_train.label.unique()
+# data_train[data_train.label == 1].to_numpy()
+#
+# row = data_train.iloc[1].to_numpy()
+# label = row[0]
+# digit_img = row[1:].reshape(28, 28)
+# print("label:",label)
 # print("image of the digit:\n", digit_img)
 
 # plt.imshow(digit_img, interpolation='nearest', cmap='gray')
@@ -164,7 +164,6 @@ class Transformer(nn.Module):
             x = attn(x, mask=mask)
             x = ff(x)
         return x
-
 
 class ViT(nn.Module):
     def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3):
