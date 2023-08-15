@@ -8,8 +8,13 @@ from torchvision import transforms
 from tqdm import tqdm
 from einops import rearrange
 import torch.nn.functional as F
+from PIL import Image
+import matplotlib.pyplot as plt
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+image = Image.open('/home/xuwenbo/data/image.jpg')
+plt.imshow(image)
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -126,10 +131,10 @@ class ViT(nn.Module):
         x = self.to_cls_token(x[:, 0])
         return self.mlp_head(x)
 
-model = ViT(image_size=28, patch_size=7, num_classes=10, channels=1,
-            dim=64, depth=6, heads=8, mlp_dim=128)
-model = model.to(DEVICE)
-
-model_path = '/home/xuwenbo/data/simple_model.pth'
-model.load_state_dict(torch.load(model_path))
-model.eval()
+# model = ViT(image_size=28, patch_size=7, num_classes=10, channels=1,
+#             dim=64, depth=6, heads=8, mlp_dim=128)
+# model = model.to(DEVICE)
+#
+# model_path = '/home/xuwenbo/data/simple_model.pth'
+# model.load_state_dict(torch.load(model_path))
+# model.eval()
