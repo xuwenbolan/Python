@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from tqdm import tqdm
 from einops import rearrange
 import torch.nn.functional as F
 from PIL import Image
@@ -162,10 +161,14 @@ tram_image = transform(image_array)
 test_dataset = []
 test_dataset.append(tram_image)
 submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
+title = ""
 for images in submission_loader:
     images = images.to(DEVICE)
     output = F.log_softmax(model(images), dim=1)
     _, pred = torch.max(output, dim=1)
 
     for prediction in pred:
-        print("The number is:", prediction.item())
+        title = "Pre number: " + str(prediction.item())
+plt.imshow(image,cmap='gray',interpolation='nearest')
+plt.title(title)
+plt.show()
