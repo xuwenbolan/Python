@@ -304,8 +304,11 @@ for epoch in range(1, N_EPOCHS + 1):
 
 print('Execution time:', '{:5.2f}'.format(time.time() - start_time), 'seconds')
 
-'''Making Predictions on Test data'''
+'''Save Model'''
+model_path = 'simple_model.pth'
+torch.save(model.state_dict(), model_path)
 
+'''Making Predictions on Test data'''
 submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=BATCH_SIZE_TEST, shuffle=False)
 
 # Making it submission ready
