@@ -62,14 +62,14 @@ val_transform = transforms.Compose([
     transforms.Normalize(mean=[train_mean], std=[train_std]),
 ])
 test_transform = val_transform
-# train_dataset = MNISTDataset(data_train.iloc[:-eval_count], default_transform)
+# Instantiate the training dataset
 train_dataset = MNISTDataset(data_train, train_transform) # use this to train the model on the full training set
+# Instantiate the evaluate dataset
 eval_dataset = MNISTDataset(data_train.iloc[-eval_count:], val_transform)
 
 data_test = pd.read_csv('/home/xuwenbo/data/test.csv')
+# Instantiate the test dataset
 test_dataset = MNISTDataset(data_test, test_transform, is_test=True)
-
-'''Original training data format'''
 
 '''ViT model'''
 
@@ -78,6 +78,9 @@ from einops import rearrange
 '''
 desc: Add (residual calculation)
 fn: Processing function to be performed in advance
+1. Alleviate the vanishing gradient problem
+2. Accelerated training
+3. Keep information
 '''
 
 class Residual(nn.Module):
@@ -180,7 +183,7 @@ class Transformer(nn.Module):
         return x
 
 '''
-desc: 
+desc: ViT Model
 '''
 
 class ViT(nn.Module):
@@ -290,9 +293,6 @@ train_loss_history, test_loss_history = [], []
 
 N_EPOCHS = 100
 
-# lambda1 = lambda epoch: epoch // 30
-# lambda2 = lambda epoch: 0.95 ** epoch
-# scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda2)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
 
 start_time = time.time()
