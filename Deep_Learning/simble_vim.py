@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-image = Image.open('/home/xuwenbo/data/2_1.jpg')
+image = Image.open('/home/xuwenbo/data/7_1.jpg')
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -160,9 +160,9 @@ image_array = np.array(image)
 # print(image_array)
 tram_image = transform(image_array)
 test_dataset = []
-test_dataset.append((tram_image,5))
+test_dataset.append(tram_image)
 submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
-for images, _ in submission_loader:
+for images in submission_loader:
     images = images.to(DEVICE)
     output = F.log_softmax(model(images), dim=1)
     _, pred = torch.max(output, dim=1)
