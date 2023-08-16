@@ -9,10 +9,9 @@ from einops import rearrange
 import torch.nn.functional as F
 from PIL import Image
 import matplotlib.pyplot as plt
+import pygame
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-image = Image.open('/home/xuwenbo/data/7_1.jpg')
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -148,6 +147,51 @@ val_transform = transforms.Compose([
     transforms.Normalize(mean=[train_mean], std=[train_std]),
 ])
 
+def get_image():
+    image = Image.open('/home/xuwenbo/data/7_1.jpg')
+    return np.array(image)
+
+
+def draw_image():
+    pygame.init()
+    canvas_size = (28, 28)
+    window_size = (canvas_size[0] * 20, canvas_size[1] * 20)
+    canvas = np.zeros(canvas_size, dtype=np.uint8)
+    white = (255, 255, 255)
+    Black = (0, 0, 0)
+    screen = pygame.display.set_mode(window_size)
+    pygame.display.set_caption('Drawing Canvas')
+
+    drawing = False
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                drawing = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                drawing = False
+            elif event.type == pygame.MOUSEMOTION:
+                if drawing:
+                    x, y = event.pos
+                    if 0 <= x < window_size[0] and 0 <= y < window_size[1]:
+                        canvas[y // 20, x // 20] = 255
+        screen.fill(Black)
+        for y in range(canvas_size[1]):
+            for x in range(canvas_size[0]):
+                if canvas[y, x] == 255:
+                    pygame.draw.rect(screen, white, (x * 20, y * 20, 20, 20))
+
+        pygame.display.flip()
+    saved_array = canvas
+    pygame.quit()
+    return saved_array
+
+# image = get_image()
+image = draw_image()
+
 model = ViT(image_size=28, patch_size=7, num_classes=10, channels=1,
             dim=64, depth=6, heads=8, mlp_dim=128)
 model = model.to(DEVICE)
@@ -155,9 +199,8 @@ model = model.to(DEVICE)
 model_path = '/home/xuwenbo/data/simple_model.pth'
 model.load_state_dict(torch.load(model_path))
 model.eval()
-image_array = np.array(image)
 # print(image_array)
-tram_image = transform(image_array)
+tram_image = transform(image)
 test_dataset = []
 test_dataset.append(tram_image)
 submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
@@ -172,3 +215,4 @@ for images in submission_loader:
 plt.imshow(image,cmap='gray',interpolation='nearest')
 plt.title(title)
 plt.show()
+plt.close()
