@@ -14,7 +14,7 @@ for dirname, _, filenames in os.walk('/home/xuwenbo/data'):
     for filename in filenames:
         print(os.path.join(dirname, filename))
 
-
+'''Dataloader for MNIST dataset'''
 class MNISTDataset(Dataset):
     def __init__(self, data_df: pd.DataFrame, transform=None, is_test=False):
         super(MNISTDataset, self).__init__()
@@ -68,23 +68,17 @@ eval_dataset = MNISTDataset(data_train.iloc[-eval_count:], val_transform)
 
 data_test = pd.read_csv('/home/xuwenbo/data/test.csv')
 test_dataset = MNISTDataset(data_test, test_transform, is_test=True)
-#
-# print(data_train)
-#
-# data_train.label.unique()
-# data_train[data_train.label == 1].to_numpy()
-#
-# row = data_train.iloc[1].to_numpy()
-# label = row[0]
-# digit_img = row[1:].reshape(28, 28)
-# print("label:",label)
-# print("image of the digit:\n", digit_img)
 
-# plt.imshow(digit_img, interpolation='nearest', cmap='gray')
-# plt.show()
+'''Original training data format'''
+
+'''ViT model'''
 
 from einops import rearrange
 
+'''
+desc: Add (residual calculation)
+fn: Processing function to be performed in advance
+'''
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -94,6 +88,11 @@ class Residual(nn.Module):
     def forward(self, x, **kwargs):
         return self.fn(x, **kwargs) + x
 
+'''
+desc: Norm
+dim: dimension
+fn: Processing function to be performed in advance
+'''
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
@@ -104,20 +103,32 @@ class PreNorm(nn.Module):
     def forward(self, x, **kwargs):
         return self.fn(self.norm(x), **kwargs)
 
-
+'''
+desc: MLP
+dim: input and output dimension
+hidden_dim: middle layer dimension
+dropout: Set drop probability to 0 (Very useful when the amount of data is limited)
+'''
 class FeedForward(nn.Module):
-    def __init__(self, dim, hidden_dim):
+    def __init__(self, dim, hidden_dim, dropout=0.):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(dim, hidden_dim),
-            nn.GELU(),
-            nn.Linear(hidden_dim, dim)
+            nn.Linear(dim, hidden_dim), # fully connected layer
+            # nn.Dropout(dropout),
+            nn.GELU(), # activation function
+            # nn.Dropout(dropout),
+            nn.Linear(hidden_dim, dim) # fully connected layer
         )
 
     def forward(self, x):
         return self.net(x)
 
-
+'''
+desc: Multi-Head Attention
+heads: the number of heads for multi-head self-attention
+dim: the dimension of the each head
+qkv: query, Key and Value
+'''
 class Attention(nn.Module):
     def __init__(self, dim, heads=8):
         super().__init__()
@@ -148,6 +159,9 @@ class Attention(nn.Module):
         out = self.to_out(out)
         return out
 
+'''
+desc: Transformer Block (Transformer Encoder)
+'''
 
 class Transformer(nn.Module):
     def __init__(self, dim, depth, heads, mlp_dim):
@@ -165,11 +179,15 @@ class Transformer(nn.Module):
             x = ff(x)
         return x
 
+'''
+desc: 
+'''
+
 class ViT(nn.Module):
     def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3):
         super().__init__()
         assert image_size % patch_size == 0, 'image dimensions must be divisible by the patch size'
-        num_patches = (image_size // patch_size) ** 2
+        num_patches = (image_size // patch_size) ** 2 # integer division
         patch_dim = channels * patch_size ** 2
 
         self.patch_size = patch_size
@@ -201,6 +219,8 @@ class ViT(nn.Module):
         x = self.to_cls_token(x[:, 0])
         return self.mlp_head(x)
 
+'''Load the MNIST dataset'''
+
 torch.manual_seed(42)
 
 BATCH_SIZE_TRAIN = 100
@@ -208,6 +228,8 @@ BATCH_SIZE_TEST = 1000
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE_TRAIN, shuffle=True)
 eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=BATCH_SIZE_TEST, shuffle=False)
+
+'''Train the model'''
 
 import torch.nn.functional as F
 
@@ -281,6 +303,8 @@ for epoch in range(1, N_EPOCHS + 1):
     scheduler.step()
 
 print('Execution time:', '{:5.2f}'.format(time.time() - start_time), 'seconds')
+
+'''Making Predictions on Test data'''
 
 submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=BATCH_SIZE_TEST, shuffle=False)
 

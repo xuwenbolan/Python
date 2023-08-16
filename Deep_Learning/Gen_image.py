@@ -54,10 +54,11 @@ Loss_data = [0.7173311157226563,
  0.10832042694091797,
  0.10843888854980469,
  0.10859993743896484,
- 0.1087214584350586]# 绘制折线图
-plt.plot(x, accuracy_data)  # 使用圆点作为标记
-plt.title('Accuracy Line')     # 添加标题
+ 0.1087214584350586]
+plt.plot(x, accuracy_data,label='accuracy',marker='o')
+plt.plot(x, Loss_data,label='loss',marker='x')
+plt.title('Accuracy and Loss Lines')     # 添加标题
 plt.xlabel('Epochs')        # 添加 X 轴标签
-plt.ylabel('accuracy')        # 添加 Y 轴标签
-# plt.grid(True)              # 显示网格线
+plt.ylabel('accuracy and loss')        # 添加 Y 轴标签
+plt.legend()
 plt.show()                  # 显示图像
