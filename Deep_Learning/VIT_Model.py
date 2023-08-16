@@ -155,7 +155,7 @@ def get_image():
 def draw_image():
     pygame.init()
     canvas_size = (28, 28)
-    window_size = (canvas_size[0] * 20, canvas_size[1] * 20)
+    window_size = (canvas_size[0] * 40, canvas_size[1] * 40)
     canvas = np.zeros(canvas_size, dtype=np.uint8)
     white = (255, 255, 255)
     Black = (0, 0, 0)
@@ -177,12 +177,12 @@ def draw_image():
                 if drawing:
                     x, y = event.pos
                     if 0 <= x < window_size[0] and 0 <= y < window_size[1]:
-                        canvas[y // 20, x // 20] = 255
+                        canvas[y // 40, x // 40] = 255
         screen.fill(Black)
         for y in range(canvas_size[1]):
             for x in range(canvas_size[0]):
                 if canvas[y, x] == 255:
-                    pygame.draw.rect(screen, white, (x * 20, y * 20, 20, 20))
+                    pygame.draw.rect(screen, white, (x * 40, y * 40, 40, 40))
 
         pygame.display.flip()
     saved_array = canvas
@@ -215,4 +215,3 @@ for images in submission_loader:
 plt.imshow(image,cmap='gray',interpolation='nearest')
 plt.title(title)
 plt.show()
-plt.close()
