@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-image = Image.open('/home/xuwenbo/data/image.jpg')
-plt.imshow(image)
+image = Image.open('/home/xuwenbo/data/2_1.jpg')
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -131,10 +130,42 @@ class ViT(nn.Module):
         x = self.to_cls_token(x[:, 0])
         return self.mlp_head(x)
 
-# model = ViT(image_size=28, patch_size=7, num_classes=10, channels=1,
-#             dim=64, depth=6, heads=8, mlp_dim=128)
-# model = model.to(DEVICE)
-#
-# model_path = '/home/xuwenbo/data/simple_model.pth'
-# model.load_state_dict(torch.load(model_path))
-# model.eval()
+data_train = pd.read_csv('/home/xuwenbo/data/train.csv')
+train_data = data_train.drop('label', axis=1).values
+train_mean = train_data.mean()/255.
+train_std = train_data.std()/255.
+eval_count = 1000
+train_transform = transform=transforms.Compose([
+    transforms.ToPILImage(),
+    transforms.RandomRotation(15),
+    transforms.RandomAffine(degrees=20, translate=(0.1,0.1), scale=(0.9, 1.1)),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[train_mean], std=[train_std]),
+])
+val_transform = transforms.Compose([
+    transforms.ToPILImage(),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[train_mean], std=[train_std]),
+])
+
+model = ViT(image_size=28, patch_size=7, num_classes=10, channels=1,
+            dim=64, depth=6, heads=8, mlp_dim=128)
+model = model.to(DEVICE)
+
+model_path = '/home/xuwenbo/data/simple_model.pth'
+model.load_state_dict(torch.load(model_path))
+model.eval()
+image_array = np.array(image)
+# print(image_array)
+tram_image = transform(image_array)
+test_dataset = []
+test_dataset.append((tram_image,5))
+submission_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
+for images, _ in submission_loader:
+    images = images.to(DEVICE)
+    output = F.log_softmax(model(images), dim=1)
+    _, pred = torch.max(output, dim=1)
+
+    for prediction in pred:
+        print("The number is:", prediction.item())
